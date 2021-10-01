@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Assignment4.Core;
 
 namespace Assignment4.Entities
 {
     public class Task
     {
         public int Id { get; set; }
-        
+
         [StringLength(100)]
         [Required]
         public string Title { get; set; }
@@ -15,13 +16,4 @@ namespace Assignment4.Entities
         public State state { get; set; }
         public ICollection<Tag> tags { get; set; }
     }
-}
-
-public enum State
-{
-    New,
-    Active,
-    Resolved,
-    Closed,
-    Removed
 }

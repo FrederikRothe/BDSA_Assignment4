@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace Assignment4.Entities
 {
+    //[Index(nameof(User.Email),IsUnique = true)]
     public class User
     {
         public int Id { get; set; }
