@@ -1,0 +1,51 @@
+@startuml
+title Liskov Substitution Principle - Good
+
+class BankingService {}
+
+Account <|.left. BankingService : Uses
+
+class Account {
+    deposit(int)
+    withdraw(int)
+}
+
+class SavingsAccount {
+    deposit(int)
+    withdraw(int)
+}
+
+class PensionAccount {
+    deposit(int)
+    withdraw(int)
+}
+
+Account <|-- SavingsAccount
+Account <|-- PensionAccount
+@enduml
+
+@startuml
+title Liskov Substitution Principle - Bad
+
+class BankingService {}
+
+Account <|.left. BankingService : Uses
+
+class Account {
+    deposit(int)
+    withdraw(int)
+}
+
+class SavingsAccount {
+    depositSavings(int)
+    withdraw(int)
+}
+
+class PensionAccount {
+    depositPension(int)
+    withdraw(int)
+}
+
+Account <|-- SavingsAccount
+Account <|-- PensionAccount
+@enduml

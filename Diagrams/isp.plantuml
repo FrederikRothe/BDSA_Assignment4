@@ -1,0 +1,56 @@
+@startuml
+title Interface Segregation Principle - Bad
+
+interface LargeInterface {
+    first()
+    second()
+    third()
+}
+
+class LargeClass {
+    first()
+    second()
+    third()
+}
+
+class SmallClass {
+    first()
+    second()
+    third()
+}
+
+LargeInterface <-- LargeClass
+LargeInterface <-- SmallClass
+@enduml
+
+@startuml
+title Interface Segregation Principle - Good
+
+interface FirstInterface {
+    first()
+}
+
+interface SecondInterface {
+    second()
+}
+
+interface ThirdInterface {
+    third()
+}
+
+
+class LargeClass {
+    first()
+    second()
+    third()
+}
+
+class SmallClass {
+    second()
+}
+
+FirstInterface <-- LargeClass
+SecondInterface <-- LargeClass
+ThirdInterface <-- LargeClass
+SecondInterface <-- SmallClass
+@enduml
