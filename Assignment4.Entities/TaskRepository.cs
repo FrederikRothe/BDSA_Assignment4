@@ -12,15 +12,6 @@ using System;
 using System.Linq;
 
 namespace Assignment4.Entities
-
-/*
-
-OBS: class is currently untested
-
-OBS: class should be rewritten to use kanbanContext instead of RawSql
-*/
-
-
 {
     public class TaskRepository : ITaskRepository
     {
@@ -49,19 +40,16 @@ OBS: class should be rewritten to use kanbanContext instead of RawSql
 
         public void Delete(int taskId)
         {
-            throw new NotImplementedException();
-            // _context.Remove(_context.Tasks.Single(t => t.Id == taskId));
-        }
-
-
-        public void Dispose()
-        {
-             _context.Dispose();
+            _context.Tasks.Remove(_context.Tasks.Single(t => t.Id == taskId));
+            _context.SaveChanges();
         }
 
         public IReadOnlyCollection<TaskDTO> All()
         {
-            throw new NotImplementedException();
+            var tasks = from t in _context.Tasks
+                select new TaskDTO(t.Id, t.Title, t.Description);
+
+            return tasks.ToList();
         }
 
         public TaskDTO Create(TaskCreateDTO task)
@@ -79,12 +67,30 @@ OBS: class should be rewritten to use kanbanContext instead of RawSql
 
         public TaskDetailsDTO FindById(int id)
         {
-            throw new NotImplementedException();
+            var tasks = from t in _context.Tasks
+                where t.Id == id
+                select new TaskDetailsDTO {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description
+                };
+
+            return tasks.FirstOrDefault();
         }
 
         public void Update(TaskDTO task)
         {
-            throw new NotImplementedException();
+            var entity = _context.Tasks.Find(task.Id);
+
+            entity.Title = task.Title;
+            entity.Description = task.Description;
+
+            _context.SaveChanges();
+       }
+    
+        public void Dispose()
+        {
+             _context.Dispose();
         }
     }
 }
