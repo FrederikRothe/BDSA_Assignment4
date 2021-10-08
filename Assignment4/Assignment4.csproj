@@ -11,6 +11,8 @@
   </PropertyGroup>
 
  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
     <ProjectReference Include="..\Assignment4.Core\Assignment4.Core.csproj" />
     <ProjectReference Include="..\Assignment4.Entities\Assignment4.Entities.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.10">

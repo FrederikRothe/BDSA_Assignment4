@@ -10,7 +10,7 @@ using Assignment4.Entities;
 
 namespace Assignment4
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -19,6 +19,7 @@ namespace Assignment4
 
             var optionsBuilder = new DbContextOptionsBuilder<KanbanContext>().UseSqlServer(connectionString);
             using var context = new KanbanContext(optionsBuilder.Options);
+
         }
         static IConfiguration LoadConfiguration()
         {
