@@ -33,31 +33,42 @@ namespace Assignment4.Entities.Tests
             var tag = new TagCreateDTO("Second");
             var created = _repo.Create(tag);
             
-            Assert.Equal(new TagDTO(2, "Second"), created);
+            Assert.Equal(Response.Created, created.Item1);
+            Assert.Equal(new TagDTO(2, "Second"), created.Item2);
         }
 
         [Fact]
         public void Read_given_non_existing_id_return_null() {
             var read = _repo.FindById(53);
 
-            Assert.Null(read);            
+            Assert.Equal(Response.NotFound, read.Item1);
+            Assert.Null(read.Item2);            
         }
 
         [Fact]
         public void Read_given_existing_id_return_task() {
             var read = _repo.FindById(1);
 
-            Assert.Equal(new TagDTO(1, "First"), read);
+            Assert.Equal(Response.Success, read.Item1);
+            Assert.Equal(new TagDTO(1, "First"), read.Item2);
         }
 
         [Fact]
         public void Delete_given_id_delete_and_read_returns_null() {
             var read = _repo.FindById(1);
-            _repo.Delete(1);
-            Assert.NotNull(read);
+            Assert.NotNull(read.Item2);
+            
+            var response = _repo.Delete(1);
+            Assert.Equal(Response.Deleted, response);
 
             read = _repo.FindById(1);
-            Assert.Null(read);
+            Assert.Null(read.Item2);
+        }
+
+        [Fact]
+        public void Delete_given_non_existing_id_returns_not_found() {
+            var response = _repo.Delete(59);
+            Assert.Equal(Response.NotFound, response);
         }
 
         [Fact]
@@ -67,7 +78,8 @@ namespace Assignment4.Entities.Tests
 
             var tags = _repo.All();
 
-            Assert.Collection(tags,
+            Assert.Equal(Response.Success, tags.Item1);
+            Assert.Collection(tags.Item2,
                 c => Assert.Equal(new TagDTO(1, "First"), c),
                 c => Assert.Equal(new TagDTO(2, "Second"), c)
             );
@@ -77,10 +89,18 @@ namespace Assignment4.Entities.Tests
         public void Update_update_tag_given_new_data() {
             var tag = new TagDTO(1, "New name");
 
-            _repo.Update(tag);
+            var response = _repo.Update(tag);
             
-            Assert.Equal(tag, _repo.FindById(1));
+            Assert.Equal(Response.Updated, response);
+            Assert.Equal(tag, _repo.FindById(1).Item2);
         }
+
+        [Fact]
+        public void Update_given_non_existing_id_returns_not_found() {
+            var response = _repo.Update(new TagDTO(59, "Not existing"));
+            Assert.Equal(Response.NotFound, response);
+        }
+
 
         public void Dispose() {
             _context.Dispose();

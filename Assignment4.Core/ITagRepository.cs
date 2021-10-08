@@ -4,14 +4,14 @@ using System.Collections.Generic;
 namespace Assignment4.Core
 {
     public interface ITagRepository : IDisposable {
-        IReadOnlyCollection<TagDTO> All();
+        (Response, IReadOnlyCollection<TagDTO>) All();
 
-        TagDTO Create(TagCreateDTO tag);
+        (Response, TagDTO) Create(TagCreateDTO tag);
 
-        void Delete(int tagId);
+        Response Delete(int tagId);
 
-        TagDTO FindById(int tagId);
+        (Response, TagDTO) FindById(int tagId);
 
-        void Update(TagDTO tag);
+        Response Update(TagDTO tag);
     }
 }

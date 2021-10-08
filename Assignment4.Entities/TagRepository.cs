@@ -15,15 +15,15 @@ namespace Assignment4.Entities
             _context = context;
         }
 
-        public IReadOnlyCollection<TagDTO> All()
+        public (Response, IReadOnlyCollection<TagDTO>) All()
         {
             var tags = from t in _context.Tags
                 select new TagDTO(t.Id, t.Name);
 
-            return tags.ToList();
+            return (Response.Success, tags.ToList());
         }
 
-        public TagDTO Create(TagCreateDTO tag)
+        public (Response, TagDTO) Create(TagCreateDTO tag)
         {
             var entity = new Tag {
                 Name = tag.Name
@@ -32,31 +32,47 @@ namespace Assignment4.Entities
             _context.Tags.Add(entity);
             _context.SaveChanges();
 
-            return new TagDTO(entity.Id, entity.Name);
+            return (Response.Created, new TagDTO(entity.Id, entity.Name));
         }
 
-        public void Delete(int tagId)
+        public Response Delete(int tagId)
         {
-            _context.Tags.Remove(_context.Tags.Single(t => t.Id == tagId));
+            var entity = _context.Tags.Find(tagId);
+
+            if (entity == null) {
+                return Response.NotFound;
+            }
+
+            _context.Tags.Remove(entity);
             _context.SaveChanges();
+
+            return Response.Deleted;
         }
 
-        public TagDTO FindById(int tagId)
+        public (Response, TagDTO) FindById(int tagId)
         {
-            var tags = from t in _context.Tags
-                where t.Id == tagId
-                select new TagDTO(t.Id, t.Name);
+            var tag = _context.Tags.Find(tagId);
 
-            return tags.FirstOrDefault();
+            if (tag == null) {
+                return (Response.NotFound, null);
+            }
+            
+            return (Response.Success, new TagDTO(tag.Id, tag.Name));
         }
 
-        public void Update(TagDTO tag)
+        public Response Update(TagDTO tag)
         {
             var entity = _context.Tags.Find(tag.Id);
+
+            if (entity == null) {
+                return Response.NotFound;
+            }
 
             entity.Name = tag.Name;
 
             _context.SaveChanges();
+
+            return Response.Updated;
         }
 
         public void Dispose()
