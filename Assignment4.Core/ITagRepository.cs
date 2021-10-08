@@ -8,7 +8,7 @@ namespace Assignment4.Core
 
         (Response, TagDTO) Create(TagCreateDTO tag);
 
-        Response Delete(int tagId);
+        Response Delete(int tagId, bool force = false);
 
         (Response, TagDTO) FindById(int tagId);
 

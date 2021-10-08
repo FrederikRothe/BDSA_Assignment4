@@ -2,6 +2,7 @@ using System;
 using Assignment4.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using Xunit;
 
 namespace Assignment4.Entities.Tests
@@ -38,6 +39,16 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
+        public void Create_given_existing_tag_returns_conflict()
+        {
+            var tag = new TagCreateDTO("First");
+            var created = _repo.Create(tag);
+            
+            Assert.Equal(Response.Conflict, created.Item1);
+            Assert.Null(created.Item2);
+        }
+
+        [Fact]
         public void Read_given_non_existing_id_return_null() {
             var read = _repo.FindById(53);
 
@@ -70,6 +81,26 @@ namespace Assignment4.Entities.Tests
             var response = _repo.Delete(59);
             Assert.Equal(Response.NotFound, response);
         }
+
+        [Fact]
+        public void Delete_tag_in_use_returns_conflict() {
+            var entity = _context
+                .Tags
+                .Include(t => t.Tasks)
+                .Where(t => t.Id == 1)
+                .First();
+
+            entity.Tasks.Add(new Task {
+                Title = "Task",
+                Description = "Blocking"
+            });
+
+            _context.SaveChanges();
+
+            var response = _repo.Delete(1);
+            Assert.Equal(Response.Conflict, response);
+        }
+
 
         [Fact]
         public void All_find_all_tags() {
@@ -108,4 +139,3 @@ namespace Assignment4.Entities.Tests
         }
     }
 }
-

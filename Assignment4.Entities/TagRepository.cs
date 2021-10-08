@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace Assignment4.Entities
 {
@@ -29,18 +30,34 @@ namespace Assignment4.Entities
                 Name = tag.Name
             };
 
+            var exists = from t in _context.Tags
+                where t.Name == tag.Name
+                select new TagDTO(t.Id, t.Name);
+
+            if (exists.Any()) {
+                return (Response.Conflict, null);
+            }
+
             _context.Tags.Add(entity);
             _context.SaveChanges();
 
             return (Response.Created, new TagDTO(entity.Id, entity.Name));
         }
 
-        public Response Delete(int tagId)
+        public Response Delete(int tagId, bool force = false)
         {
-            var entity = _context.Tags.Find(tagId);
-
+            var entity = _context
+                .Tags
+                .Include(t => t.Tasks)
+                .Where(t => t.Id == tagId)
+                .FirstOrDefault();
+            
             if (entity == null) {
                 return Response.NotFound;
+            }
+
+            if (entity.Tasks.Count != 0 && !force) {
+                return Response.Conflict;
             }
 
             _context.Tags.Remove(entity);
