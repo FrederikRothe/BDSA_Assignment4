@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System;
+using System.Linq;
 
 namespace Assignment4.Entities
 
@@ -23,166 +24,67 @@ OBS: class should be rewritten to use kanbanContext instead of RawSql
 {
     public class TaskRepository : ITaskRepository
     {
-       private readonly SqlConnection _connection;
+       private readonly IKanbanContext _context;
 
-        public TaskRepository(SqlConnection connection)
+        public TaskRepository(IKanbanContext context)
         {
-            _connection = connection;     
+            _context = context;     
         }
 
         
         //skipped assignedTo, didnt finish State call
         //figure out parsing from string to enum
-        public IReadOnlyCollection<TaskDTO> All()
+        public IReadOnlyCollection<TaskDTO> Read()
         {
-            List<TaskDTO> temporaryList = new List<TaskDTO>();
-            var cmdText = @"SELECT t.Id, t.Title,t.Description, t.state
-                            FROM Tasks AS t
-                            ORDER BY t.Id";
+            var tasks = from t in _context.Tasks
+                select new TaskDTO(
+                    t.Id,
+                    t.Title,
+                    t.Description
+                    // State = t.state
+                );
 
-            using var command = new SqlCommand(cmdText, _connection);
-
-            OpenConnection();
-
-            using var reader = command.ExecuteReader();
-
-            while (reader.Read())
-            {
-                var task = new TaskDTO
-                {
-                    Id = reader.GetInt32("Id"),
-                    Title = reader.GetString("Title"),
-                    Description = reader.GetString("Description"),
-                    //check how to parse from string to enum again
-                    //State = Enum.Parse(State,reader.GetString("State")),
- 
-                };
-                temporaryList.Add(task);
-            }
-            CloseConnection();
-
-            ReadOnlyCollection<TaskDTO> listOfTasksDTO = new ReadOnlyCollection<TaskDTO>(temporaryList); 
-
-            return  listOfTasksDTO;
-
+           return new ReadOnlyCollection<TaskDTO>(tasks.ToList());
         }
 
         public void Delete(int taskId)
         {
-            var cmdText = @"DELETE Tasks WHERE Id = @Id";
-
-            using var command = new SqlCommand(cmdText, _connection);
-
-            command.Parameters.AddWithValue("@Id",taskId);
-
-            OpenConnection();
-
-            command.ExecuteNonQuery();
-
-            CloseConnection();
+            throw new NotImplementedException();
+            // _context.Remove(_context.Tasks.Single(t => t.Id == taskId));
         }
 
 
         public void Dispose()
         {
-             _connection.Dispose();
+             _context.Dispose();
         }
 
+        public IReadOnlyCollection<TaskDTO> All()
+        {
+            throw new NotImplementedException();
+        }
 
-        //skipped assingnedTo, for now
-        //figure out parsing of string to enum
+        public TaskDTO Create(TaskCreateDTO task)
+        {
+            var created = new Task {
+                Title = task.Title,
+                Description = task.Description
+            };
+
+            _context.Tasks.Add(created);
+            _context.SaveChanges();
+
+            return new TaskDTO(created.Id, created.Title, created.Description);            
+        }
+
         public TaskDetailsDTO FindById(int id)
         {
-            var cmdText = @"SELECT t.Id, t.Title, t.Description, t.State
-                            FROM Tasks AS t
-                            WHERE c.Id = @Id";
-
-            using var command = new SqlCommand(cmdText, _connection);
-
-            command.Parameters.AddWithValue("@Id", id);
-
-            OpenConnection();
-
-            using var reader = command.ExecuteReader();
-
-            var taskDetails = reader.Read()
-                ? new TaskDetailsDTO
-                {
-                    Id = reader.GetInt32("Id"),
-                    Title = reader.GetString("Title"),
-                    Description = reader.GetString("Description"),
-                    //State = Parse.Enum(reader.GetString("State")),
- 
-                }
-                : null;
-
-            CloseConnection();
-
-            return taskDetails;
+            throw new NotImplementedException();
         }
 
-        //skipped assignedTo, for now
         public void Update(TaskDTO task)
- {
-            var cmdText = @"UPDATE Tasks SET
-                            Title = @Title,
-                            Description = @Description,
-                            State = @State,
-                            WHERE Id = @Id";
-
-            using var command = new SqlCommand(cmdText, _connection);
-
-            command.Parameters.AddWithValue("@Id", task.Id);
-            command.Parameters.AddWithValue("@Description", task.Description);
-            command.Parameters.AddWithValue("@State", task.State);
-            command.Parameters.AddWithValue("@Title",task.Title);
-
-            OpenConnection();
-
-            command.ExecuteNonQuery();
-
-            CloseConnection();
-        }
-
-        //skipped AssignedTo, for now
-        public int Create(TaskDTO task)
         {
-            //why scope identity? ask grp
-            var cmdText = @"INSERT Task (Title, Description, State )
-                                Values (@Title, @Description, @State);
-                                SELECT SCOPE_IDENTITY()";
-            using var command = new SqlCommand(cmdText, _connection);
-
-            command.Parameters.AddWithValue("@Title", task.Title);
-            command.Parameters.AddWithValue("@Description", task.Description);
-            command.Parameters.AddWithValue("@State", task.State);
-
-            OpenConnection();
-
-            var id = command.ExecuteScalar();
-
-            CloseConnection();
-
-            return (int)id;
-                        
+            throw new NotImplementedException();
         }
-
-        private void OpenConnection()
-        {
-            if (_connection.State == ConnectionState.Closed)
-            {
-                _connection.Open();
-            }
-        }
-
-         private void CloseConnection()
-        {
-            if (_connection.State == ConnectionState.Open)
-            {
-                _connection.Close();
-            }
-        }
-
-
     }
 }

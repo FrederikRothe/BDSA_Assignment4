@@ -13,7 +13,7 @@ namespace Assignment4.Core
         /// </summary>
         /// <param name="task"></param>
         /// <returns>The id of the newly created task</returns>
-        int Create(TaskDTO task);
+        TaskDTO Create(TaskCreateDTO task);
 
         void Delete(int taskId);
 
