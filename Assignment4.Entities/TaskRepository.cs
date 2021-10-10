@@ -28,7 +28,7 @@ namespace Assignment4.Entities
         public (Response, IReadOnlyCollection<TaskDTO>) AllRemoved()
         {
             var tasks = from t in GetSource()
-                        where t.state == State.Removed
+                        where t.State == State.Removed
                         select TaskToTaskDTO(t);
 
             return (Response.Success, tasks.ToList());
@@ -37,7 +37,7 @@ namespace Assignment4.Entities
         public (Response, IReadOnlyCollection<TaskDTO>) AllByTag(string tag)
         {
             var tasks = from t in GetSource()
-                        where t.tags.Where(t => t.Name == tag).Any()
+                        where t.Tags.Where(t => t.Name == tag).Any()
                         select TaskToTaskDTO(t);
 
             return (Response.Success, tasks.ToList());
@@ -55,7 +55,7 @@ namespace Assignment4.Entities
         public (Response, IReadOnlyCollection<TaskDTO>) AllByState(State state)
         {
             var tasks = from t in GetSource()
-                        where t.state == state
+                        where t.State == state
                         select TaskToTaskDTO(t);
 
             return (Response.Success, tasks.ToList());
@@ -69,13 +69,13 @@ namespace Assignment4.Entities
                 return Response.NotFound;
             }
 
-            switch (entity.state)
+            switch (entity.State)
             {
                 case State.New:
                     _context.Tasks.Remove(entity);
                     break;
                 case State.Active:
-                    entity.state = State.Removed;
+                    entity.State = State.Removed;
                     break;
                 case State.Resolved:
                 case State.Closed:
@@ -103,8 +103,8 @@ namespace Assignment4.Entities
                 Title = task.Title,
                 Description = task.Description,
                 AssignedTo = user,
-                tags = tags.ToList(),
-                state = State.New,
+                Tags = tags.ToList(),
+                State = State.New,
                 Created = DateTime.UtcNow,
                 StateUpdated = DateTime.UtcNow
             };
@@ -119,7 +119,7 @@ namespace Assignment4.Entities
         {
             var tasks = from t in (_context
                 .Tasks
-                .Include(t => t.tags)
+                .Include(t => t.Tags)
                 .Include(t => t.AssignedTo)
             )
                         where t.Id == id
@@ -129,8 +129,8 @@ namespace Assignment4.Entities
                             t.Description,
                             t.Created,
                             t.AssignedTo == null ? "" : t.AssignedTo.Name,
-                            t.tags.Select(tag => tag.Name).ToList(),
-                            t.state,
+                            t.Tags.Select(tag => tag.Name).ToList(),
+                            t.State,
                             t.StateUpdated
                         );
 
@@ -153,7 +153,7 @@ namespace Assignment4.Entities
             }
 
             if (task.Tags != null) {
-                entity.tags = GetTags(task.Tags).ToList(); 
+                entity.Tags = GetTags(task.Tags).ToList(); 
             }
 
             var assignedTo = GetUser(task.AssignedToId);
@@ -167,8 +167,8 @@ namespace Assignment4.Entities
             entity.Title = task.Title;
             entity.Description = task.Description;
 
-            if (task.State != entity.state) {
-                entity.state = task.State;
+            if (task.State != entity.State) {
+                entity.State = task.State;
                 entity.StateUpdated = DateTime.UtcNow;
             }
             
@@ -180,7 +180,7 @@ namespace Assignment4.Entities
         private IIncludableQueryable<Task, User> GetSource() {
             return _context
                 .Tasks
-                .Include(t => t.tags)
+                .Include(t => t.Tags)
                 .Include(t => t.AssignedTo);
         }
 
@@ -208,8 +208,8 @@ namespace Assignment4.Entities
                 task.Id,
                 task.Title,
                 task.AssignedTo == null ? "" : task.AssignedTo.Name,
-                task.tags.Select(t => t.Name).ToList(),
-                task.state
+                task.Tags.Select(t => t.Name).ToList(),
+                task.State
             );
         }
 

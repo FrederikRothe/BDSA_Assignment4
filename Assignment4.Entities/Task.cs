@@ -14,8 +14,8 @@ namespace Assignment4.Entities
         public string Title { get; set; }
         public User? AssignedTo { get; set; }
         public string Description { get; set; }
-        public State state { get; set; } // TODO: Rename to State
-        public ICollection<Tag> tags { get; set; } // TODO: Renamte to Tags
+        public State State { get; set; } // TODO: Rename to State
+        public ICollection<Tag> Tags { get; set; } // TODO: Renamte to Tags
         public DateTime StateUpdated { get; set; }
         public DateTime Created { get; set; }
     }

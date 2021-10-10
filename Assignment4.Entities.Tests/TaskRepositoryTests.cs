@@ -64,8 +64,8 @@ namespace Assignment4.Entities.Tests
                 Title = "End Of The World",
                 AssignedTo = ac,
                 Description = "Doomsday music",
-                state = State.New,
-                tags = new List<Tag>() {
+                State = State.New,
+                Tags = new List<Tag>() {
                     js,
                     superior,
                     go
@@ -76,8 +76,8 @@ namespace Assignment4.Entities.Tests
                 Title = "Critical Hit",
                 AssignedTo = noMoreKings,
                 Description = "Funky",
-                state = State.Active,
-                tags = new List<Tag>() {
+                State = State.Active,
+                Tags = new List<Tag>() {
                     js,
                     superior
                 }
@@ -87,8 +87,8 @@ namespace Assignment4.Entities.Tests
                 Title = "Obey the groove",
                 AssignedTo = noMoreKings,
                 Description = "Funky",
-                state = State.Removed,
-                tags = new List<Tag>() {
+                State = State.Removed,
+                Tags = new List<Tag>() {
                     js,
                     go
                 }
@@ -98,8 +98,8 @@ namespace Assignment4.Entities.Tests
                 Title = "Ship in a Bottle",
                 AssignedTo = fin,
                 Description = "To be heard, not to be described (aka i have no clue)",
-                state = State.Closed,
-                tags = new List<Tag>() {
+                State = State.Closed,
+                Tags = new List<Tag>() {
                     ts,
                     inferior
                 }
@@ -109,8 +109,8 @@ namespace Assignment4.Entities.Tests
                 Title = "Anyone say over engineered?",
                 AssignedTo = goose,
                 Description = "How many technologies can this bad boy fit?",
-                state = State.Resolved,
-                tags = new List<Tag>() {
+                State = State.Resolved,
+                Tags = new List<Tag>() {
                     js,
                     ts,
                     inferior,
@@ -167,11 +167,11 @@ namespace Assignment4.Entities.Tests
             var retrievedTask = _context.Tasks.Find(1);
 
             Assert.Equal(Response.Updated, response);
-            Assert.Equal(State.Resolved, retrievedTask.state);
+            Assert.Equal(State.Resolved, retrievedTask.State);
             Assert.Equal("Updated", retrievedTask.Title);
             Assert.Equal("Testing", retrievedTask.Description);
             Assert.Equal("NoMoreKings", retrievedTask.AssignedTo.Name);
-            Assert.True(retrievedTask.tags.Select(t => t.Name).ToList().SequenceEqual(new[] { "C#" }));
+            Assert.True(retrievedTask.Tags.Select(t => t.Name).ToList().SequenceEqual(new[] { "C#" }));
         }
 
         [Fact]
@@ -213,7 +213,7 @@ namespace Assignment4.Entities.Tests
             var response = _repo.Delete(2);
 
             Assert.Equal(Response.Deleted, response);
-            Assert.Equal(State.Removed, _context.Tasks.Find(2).state);
+            Assert.Equal(State.Removed, _context.Tasks.Find(2).State);
         }
 
         [Fact]
