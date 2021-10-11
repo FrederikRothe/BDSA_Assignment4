@@ -33,12 +33,13 @@ namespace Assignment4.Entities.Tests
 
 
 
-        public void seed() {
-            var js = new Tag { Name = "Javascript"};
-            var ts = new Tag { Name = "Typescript"};
-            var inferior = new Tag { Name = "C#"};
-            var superior = new Tag { Name = "PHP"};
-            var go = new Tag { Name = "Go"};
+        public void seed()
+        {
+            var js = new Tag { Name = "Javascript" };
+            var ts = new Tag { Name = "Typescript" };
+            var inferior = new Tag { Name = "C#" };
+            var superior = new Tag { Name = "PHP" };
+            var go = new Tag { Name = "Go" };
 
             _context.Tags.AddRange(new List<Tag>(){
                 js,
@@ -60,7 +61,8 @@ namespace Assignment4.Entities.Tests
             _context.Users.Add(fin);
             _context.SaveChanges();
 
-            _context.Tasks.Add(new Task {
+            _context.Tasks.Add(new Task
+            {
                 Title = "End Of The World",
                 AssignedTo = ac,
                 Description = "Doomsday music",
@@ -72,7 +74,8 @@ namespace Assignment4.Entities.Tests
                 }
             });
             _context.SaveChanges();
-            _context.Tasks.Add(new Task {
+            _context.Tasks.Add(new Task
+            {
                 Title = "Critical Hit",
                 AssignedTo = noMoreKings,
                 Description = "Funky",
@@ -83,7 +86,8 @@ namespace Assignment4.Entities.Tests
                 }
             });
             _context.SaveChanges();
-            _context.Tasks.Add(new Task {
+            _context.Tasks.Add(new Task
+            {
                 Title = "Obey the groove",
                 AssignedTo = noMoreKings,
                 Description = "Funky",
@@ -94,7 +98,8 @@ namespace Assignment4.Entities.Tests
                 }
             });
             _context.SaveChanges();
-            _context.Tasks.Add(new Task {
+            _context.Tasks.Add(new Task
+            {
                 Title = "Ship in a Bottle",
                 AssignedTo = fin,
                 Description = "To be heard, not to be described (aka i have no clue)",
@@ -105,7 +110,8 @@ namespace Assignment4.Entities.Tests
                 }
             });
             _context.SaveChanges();
-            _context.Tasks.Add(new Task {
+            _context.Tasks.Add(new Task
+            {
                 Title = "Anyone say over engineered?",
                 AssignedTo = goose,
                 Description = "How many technologies can this bad boy fit?",
@@ -122,12 +128,160 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
+        public void All_returns_all_tasks()
+        {
+            var tasks = _repo.All();
+
+            Assert.Equal(Response.Success, tasks.Item1);
+            Assert.Collection(tasks.Item2,
+                t =>
+                {
+                    Assert.Equal(1, t.Id);
+                    Assert.Equal("End Of The World", t.Title);
+                    Assert.Equal("Aphrodite's child", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "PHP", "Go" }));
+                    Assert.Equal(State.New, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(2, t.Id);
+                    Assert.Equal("Critical Hit", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "PHP" }));
+                    Assert.Equal(State.Active, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(3, t.Id);
+                    Assert.Equal("Obey the groove", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "Go" }));
+                    Assert.Equal(State.Removed, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(4, t.Id);
+                    Assert.Equal("Ship in a Bottle", t.Title);
+                    Assert.Equal("fin", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Typescript", "C#" }));
+                    Assert.Equal(State.Closed, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(5, t.Id);
+                    Assert.Equal("Anyone say over engineered?", t.Title);
+                    Assert.Equal("Goose", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "Typescript", "C#", "PHP", "Go" }));
+                    Assert.Equal(State.Resolved, t.State);
+                }
+            );
+        }
+
+        [Fact]
+        public void AllRemoved_returns_one()
+        {
+            var tasks = _repo.AllRemoved();
+
+            Assert.Equal(Response.Success, tasks.Item1);
+            Assert.Collection(tasks.Item2,
+                t =>
+                {
+                    Assert.Equal(3, t.Id);
+                    Assert.Equal("Obey the groove", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "Go" }));
+                    Assert.Equal(State.Removed, t.State);
+                }
+            );
+        }
+
+        [Fact]
+        public void AllByTag_given_PHP_returns_three()
+        {
+            var tasks = _repo.AllByTag("PHP");
+
+            Assert.Equal(Response.Success, tasks.Item1);
+            Assert.Collection(tasks.Item2,
+                t =>
+                {
+                    Assert.Equal(1, t.Id);
+                    Assert.Equal("End Of The World", t.Title);
+                    Assert.Equal("Aphrodite's child", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "PHP", "Go" }));
+                    Assert.Equal(State.New, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(2, t.Id);
+                    Assert.Equal("Critical Hit", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "PHP" }));
+                    Assert.Equal(State.Active, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(5, t.Id);
+                    Assert.Equal("Anyone say over engineered?", t.Title);
+                    Assert.Equal("Goose", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "Typescript", "C#", "PHP", "Go" }));
+                    Assert.Equal(State.Resolved, t.State);
+                }
+            );
+        }
+
+        [Fact]
+        public void AllByUser_given_no_more_kings_returns_2_and_3()
+        {
+            var tasks = _repo.AllByUser(2);
+
+            Assert.Equal(Response.Success, tasks.Item1);
+            Assert.Collection(tasks.Item2,
+                t =>
+                {
+                    Assert.Equal(2, t.Id);
+                    Assert.Equal("Critical Hit", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "PHP" }));
+                    Assert.Equal(State.Active, t.State);
+                },
+                t =>
+                {
+                    Assert.Equal(3, t.Id);
+                    Assert.Equal("Obey the groove", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "Go" }));
+                    Assert.Equal(State.Removed, t.State);
+                }
+            );
+        }
+
+        [Fact]
+        public void AllByState_given_active_returns_one()
+        {
+            var tasks = _repo.AllByState(State.Active);
+
+            Assert.Equal(Response.Success, tasks.Item1);
+            Assert.Collection(tasks.Item2,
+                t =>
+                {
+                    Assert.Equal(2, t.Id);
+                    Assert.Equal("Critical Hit", t.Title);
+                    Assert.Equal("NoMoreKings", t.AssignedToName);
+                    Assert.True(t.Tags.SequenceEqual(new[] { "Javascript", "PHP" }));
+                    Assert.Equal(State.Active, t.State);
+                }
+            );
+        }
+
+
+        [Fact]
         public void Create_given_task_return_task_with_id()
         {
-            var task = new TaskCreateDTO {
+            var task = new TaskCreateDTO
+            {
                 Title = "Second",
                 Description = "A description",
-                Tags = new List<string>(){"Javascript", "Go"}
+                Tags = new List<string>() { "Javascript", "Go" }
             };
 
             var created = _repo.Create(task);
@@ -142,8 +296,10 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
-        public void Create_with_nonexisting_user_returns_BadRequest() {
-            var task = new TaskCreateDTO {
+        public void Create_with_nonexisting_user_returns_BadRequest()
+        {
+            var task = new TaskCreateDTO
+            {
                 AssignedToId = 154,
             };
 
@@ -152,10 +308,11 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
-        public void Delete_new_task_deletes_it() {
+        public void Delete_new_task_deletes_it()
+        {
             var read = _context.Tasks.Find(1);
             Assert.NotNull(read);
-            
+
             var response = _repo.Delete(1);
 
             read = _context.Tasks.Find(1);
@@ -163,8 +320,9 @@ namespace Assignment4.Entities.Tests
             Assert.Null(read);
         }
 
-       [Fact]
-        public void Delete_active_task_sets_removed() {
+        [Fact]
+        public void Delete_active_task_sets_removed()
+        {
             var response = _repo.Delete(2);
 
             Assert.Equal(Response.Deleted, response);
@@ -172,26 +330,30 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
-        public void Delete_resolved_closed_removed_task_returns_conflict() {
+        public void Delete_resolved_closed_removed_task_returns_conflict()
+        {
             Assert.Equal(Response.Conflict, _repo.Delete(3)); // Removed
             Assert.Equal(Response.Conflict, _repo.Delete(4)); // Closed
             Assert.Equal(Response.Conflict, _repo.Delete(5)); // Resolved
         }
 
         [Fact]
-        public void Delete_not_existing_task_returns_not_found() {
+        public void Delete_not_existing_task_returns_not_found()
+        {
             Assert.Equal(Response.NotFound, _repo.Delete(512));
         }
         [Fact]
-        public void Read_given_non_existing_id_returns_not_found() {
+        public void Read_given_non_existing_id_returns_not_found()
+        {
             var read = _repo.FindById(53);
 
-            Assert.Equal(Response.NotFound, read.Item1);            
-            Assert.Null(read.Item2);            
+            Assert.Equal(Response.NotFound, read.Item1);
+            Assert.Null(read.Item2);
         }
 
         [Fact]
-        public void Read_given_existing_id_return_task() {
+        public void Read_given_existing_id_return_task()
+        {
             var read = _repo.FindById(1);
 
             Assert.Equal(Response.Success, read.Item1);
@@ -204,8 +366,10 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
-        public void Update_update_task_given_new_state() {
-            var task = new TaskUpdateDTO {
+        public void Update_update_task_given_new_state()
+        {
+            var task = new TaskUpdateDTO
+            {
                 Id = 1,
                 Title = "Updated",
                 Description = "Testing",
@@ -227,8 +391,10 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
-        public void Update_update_with_nonexisting_user_returns_BadRequest() {
-            var task = new TaskUpdateDTO {
+        public void Update_update_with_nonexisting_user_returns_BadRequest()
+        {
+            var task = new TaskUpdateDTO
+            {
                 Id = 1,
                 AssignedToId = 154,
             };
@@ -238,8 +404,10 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
-        public void Update_update_with_nonexisting_id_returns_not_found() {
-            var task = new TaskUpdateDTO {
+        public void Update_update_with_nonexisting_id_returns_not_found()
+        {
+            var task = new TaskUpdateDTO
+            {
                 Id = 5112,
                 AssignedToId = 154,
             };
@@ -266,7 +434,8 @@ namespace Assignment4.Entities.Tests
             );
         } 
 */
-        public void Dispose() {
+        public void Dispose()
+        {
             _context.Dispose();
             _repo.Dispose();
         }
