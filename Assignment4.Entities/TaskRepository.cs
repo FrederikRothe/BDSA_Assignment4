@@ -203,7 +203,7 @@ namespace Assignment4.Entities
             } 
         }
 
-        private TaskDTO TaskToTaskDTO(Task task) {
+        private static TaskDTO TaskToTaskDTO(Task task) {
             return new TaskDTO(
                 task.Id,
                 task.Title,
