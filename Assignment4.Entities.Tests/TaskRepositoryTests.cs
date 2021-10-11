@@ -416,24 +416,6 @@ namespace Assignment4.Entities.Tests
             Assert.Equal(Response.NotFound, response);
         }
 
-
-        /*
-        [Fact]
-        public void All_find_all_tasks() {
-            _context.Tasks.Add(new Task {
-                Title = "Second",
-                Description = "Other task"
-            });
-            _context.SaveChanges();
-
-            var tasks = _repo.All();
-
-            Assert.Collection(tasks,
-                c => Assert.Equal(new TaskDTO(1, "First", "A description"), c),
-                c => Assert.Equal(new TaskDTO(2, "Second", "Other task"), c)
-            );
-        } 
-*/
         public void Dispose()
         {
             _context.Dispose();
