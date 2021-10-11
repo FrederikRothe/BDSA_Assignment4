@@ -61,33 +61,6 @@ namespace Assignment4.Entities
             return (Response.Success, tasks.ToList());
         }
 
-        public Response Delete(int taskId)
-        {
-            var entity = _context.Tasks.Find(taskId);
-
-            if (entity == null) {
-                return Response.NotFound;
-            }
-
-            switch (entity.State)
-            {
-                case State.New:
-                    _context.Tasks.Remove(entity);
-                    break;
-                case State.Active:
-                    entity.State = State.Removed;
-                    break;
-                case State.Resolved:
-                case State.Closed:
-                case State.Removed:
-                default:
-                    return Response.Conflict;
-            }
-
-            _context.SaveChanges();
-            return Response.Deleted;
-        }
-
         public (Response, TaskDTO) Create(TaskCreateDTO task)
         {
             var user = GetUser(task.AssignedToId);
@@ -113,6 +86,33 @@ namespace Assignment4.Entities
             _context.SaveChanges();
 
             return (Response.Created, TaskToTaskDTO(created));
+        }
+
+        public Response Delete(int taskId)
+        {
+            var entity = _context.Tasks.Find(taskId);
+
+            if (entity == null) {
+                return Response.NotFound;
+            }
+
+            switch (entity.State)
+            {
+                case State.New:
+                    _context.Tasks.Remove(entity);
+                    break;
+                case State.Active:
+                    entity.State = State.Removed;
+                    break;
+                case State.Resolved:
+                case State.Closed:
+                case State.Removed:
+                default:
+                    return Response.Conflict;
+            }
+
+            _context.SaveChanges();
+            return Response.Deleted;
         }
 
         public (Response, TaskDetailsDTO) FindById(int id)

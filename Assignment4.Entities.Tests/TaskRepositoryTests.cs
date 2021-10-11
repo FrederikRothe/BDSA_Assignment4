@@ -152,6 +152,58 @@ namespace Assignment4.Entities.Tests
         }
 
         [Fact]
+        public void Delete_new_task_deletes_it() {
+            var read = _context.Tasks.Find(1);
+            Assert.NotNull(read);
+            
+            var response = _repo.Delete(1);
+
+            read = _context.Tasks.Find(1);
+            Assert.Equal(Response.Deleted, response);
+            Assert.Null(read);
+        }
+
+       [Fact]
+        public void Delete_active_task_sets_removed() {
+            var response = _repo.Delete(2);
+
+            Assert.Equal(Response.Deleted, response);
+            Assert.Equal(State.Removed, _context.Tasks.Find(2).State);
+        }
+
+        [Fact]
+        public void Delete_resolved_closed_removed_task_returns_conflict() {
+            Assert.Equal(Response.Conflict, _repo.Delete(3)); // Removed
+            Assert.Equal(Response.Conflict, _repo.Delete(4)); // Closed
+            Assert.Equal(Response.Conflict, _repo.Delete(5)); // Resolved
+        }
+
+        [Fact]
+        public void Delete_not_existing_task_returns_not_found() {
+            Assert.Equal(Response.NotFound, _repo.Delete(512));
+        }
+        [Fact]
+        public void Read_given_non_existing_id_returns_not_found() {
+            var read = _repo.FindById(53);
+
+            Assert.Equal(Response.NotFound, read.Item1);            
+            Assert.Null(read.Item2);            
+        }
+
+        [Fact]
+        public void Read_given_existing_id_return_task() {
+            var read = _repo.FindById(1);
+
+            Assert.Equal(Response.Success, read.Item1);
+            Assert.Equal(1, read.Item2.Id);
+            Assert.Equal("End Of The World", read.Item2.Title);
+            Assert.Equal("Doomsday music", read.Item2.Description);
+            Assert.Equal("Aphrodite's child", read.Item2.AssignedToName);
+            Assert.True(read.Item2.Tags.SequenceEqual(new[] { "Javascript", "PHP", "Go" }));
+            Assert.Equal(State.New, read.Item2.State);
+        }
+
+        [Fact]
         public void Update_update_task_given_new_state() {
             var task = new TaskUpdateDTO {
                 Id = 1,
@@ -196,58 +248,6 @@ namespace Assignment4.Entities.Tests
             Assert.Equal(Response.NotFound, response);
         }
 
-        [Fact]
-        public void Delete_new_task_deletes_it() {
-            var read = _context.Tasks.Find(1);
-            Assert.NotNull(read);
-            
-            var response = _repo.Delete(1);
-
-            read = _context.Tasks.Find(1);
-            Assert.Equal(Response.Deleted, response);
-            Assert.Null(read);
-        }
-
-       [Fact]
-        public void Delete_active_task_sets_removed() {
-            var response = _repo.Delete(2);
-
-            Assert.Equal(Response.Deleted, response);
-            Assert.Equal(State.Removed, _context.Tasks.Find(2).State);
-        }
-
-        [Fact]
-        public void Delete_resolved_closed_removed_task_returns_conflict() {
-            Assert.Equal(Response.Conflict, _repo.Delete(3)); // Removed
-            Assert.Equal(Response.Conflict, _repo.Delete(4)); // Closed
-            Assert.Equal(Response.Conflict, _repo.Delete(5)); // Resolved
-        }
-
-        [Fact]
-        public void Delete_not_existing_task_returns_not_found() {
-            Assert.Equal(Response.NotFound, _repo.Delete(512));
-        }
-
-        [Fact]
-        public void Read_given_non_existing_id_returns_not_found() {
-            var read = _repo.FindById(53);
-
-            Assert.Equal(Response.NotFound, read.Item1);            
-            Assert.Null(read.Item2);            
-        }
-
-        [Fact]
-        public void Read_given_existing_id_return_task() {
-            var read = _repo.FindById(1);
-
-            Assert.Equal(Response.Success, read.Item1);
-            Assert.Equal(1, read.Item2.Id);
-            Assert.Equal("End Of The World", read.Item2.Title);
-            Assert.Equal("Doomsday music", read.Item2.Description);
-            Assert.Equal("Aphrodite's child", read.Item2.AssignedToName);
-            Assert.True(read.Item2.Tags.SequenceEqual(new[] { "Javascript", "PHP", "Go" }));
-            Assert.Equal(State.New, read.Item2.State);
-        }
 
         /*
         [Fact]
