@@ -1,12 +1,7 @@
 using Assignment4.Core;
 using System.Collections.Generic;
-using Assignment4;
-using Assignment4.Entities;
-using System.IO;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.Collections.ObjectModel;
-using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Query;
 using System.Data;
 using System;
 using System.Linq;
@@ -15,82 +10,212 @@ namespace Assignment4.Entities
 {
     public class TaskRepository : ITaskRepository
     {
-       private readonly IKanbanContext _context;
+        private readonly IKanbanContext _context;
 
         public TaskRepository(IKanbanContext context)
         {
-            _context = context;     
+            _context = context;
         }
 
-        
-        //skipped assignedTo, didnt finish State call
-        //figure out parsing from string to enum
-        public IReadOnlyCollection<TaskDTO> Read()
+        public (Response, IReadOnlyCollection<TaskDTO>) All()
         {
-            var tasks = from t in _context.Tasks
-                select new TaskDTO(
-                    t.Id,
-                    t.Title,
-                    t.Description
-                    // State = t.state
-                );
+            var tasks = from t in GetSource()
+                        select TaskToTaskDTO(t);
 
-           return new ReadOnlyCollection<TaskDTO>(tasks.ToList());
+            return (Response.Success, tasks.ToList());
         }
 
-        public void Delete(int taskId)
+        public (Response, IReadOnlyCollection<TaskDTO>) AllRemoved()
         {
-            _context.Tasks.Remove(_context.Tasks.Single(t => t.Id == taskId));
-            _context.SaveChanges();
+            var tasks = from t in GetSource()
+                        where t.State == State.Removed
+                        select TaskToTaskDTO(t);
+
+            return (Response.Success, tasks.ToList());
         }
 
-        public IReadOnlyCollection<TaskDTO> All()
+        public (Response, IReadOnlyCollection<TaskDTO>) AllByTag(string tag)
         {
-            var tasks = from t in _context.Tasks
-                select new TaskDTO(t.Id, t.Title, t.Description);
+            var tasks = from t in GetSource()
+                        where t.Tags.Where(t => t.Name == tag).Any()
+                        select TaskToTaskDTO(t);
 
-            return tasks.ToList();
+            return (Response.Success, tasks.ToList());
         }
 
-        public TaskDTO Create(TaskCreateDTO task)
+        public (Response, IReadOnlyCollection<TaskDTO>) AllByUser(int userId)
         {
-            var created = new Task {
+            var tasks = from t in GetSource()
+                        where t.AssignedTo.Id == userId
+                        select TaskToTaskDTO(t);
+
+            return (Response.Success, tasks.ToList());
+        }
+
+        public (Response, IReadOnlyCollection<TaskDTO>) AllByState(State state)
+        {
+            var tasks = from t in GetSource()
+                        where t.State == state
+                        select TaskToTaskDTO(t);
+
+            return (Response.Success, tasks.ToList());
+        }
+
+        public (Response, TaskDTO) Create(TaskCreateDTO task)
+        {
+            var user = GetUser(task.AssignedToId);
+
+            if (user == null && task.AssignedToId != null) {
+                return (Response.BadRequest, null);
+            }
+
+            var tags = GetTags(task.Tags);
+
+            var created = new Task
+            {
                 Title = task.Title,
-                Description = task.Description
+                Description = task.Description,
+                AssignedTo = user,
+                Tags = tags.ToList(),
+                State = State.New,
+                Created = DateTime.UtcNow,
+                StateUpdated = DateTime.UtcNow
             };
 
             _context.Tasks.Add(created);
             _context.SaveChanges();
 
-            return new TaskDTO(created.Id, created.Title, created.Description);            
+            return (Response.Created, TaskToTaskDTO(created));
         }
 
-        public TaskDetailsDTO FindById(int id)
+        public Response Delete(int taskId)
         {
-            var tasks = from t in _context.Tasks
-                where t.Id == id
-                select new TaskDetailsDTO {
-                    Id = t.Id,
-                    Title = t.Title,
-                    Description = t.Description
-                };
+            var entity = _context.Tasks.Find(taskId);
 
-            return tasks.FirstOrDefault();
+            if (entity == null) {
+                return Response.NotFound;
+            }
+
+            switch (entity.State)
+            {
+                case State.New:
+                    _context.Tasks.Remove(entity);
+                    break;
+                case State.Active:
+                    entity.State = State.Removed;
+                    break;
+                case State.Resolved:
+                case State.Closed:
+                case State.Removed:
+                default:
+                    return Response.Conflict;
+            }
+
+            _context.SaveChanges();
+            return Response.Deleted;
         }
 
-        public void Update(TaskDTO task)
+        public (Response, TaskDetailsDTO) FindById(int id)
+        {
+            var tasks = from t in (_context
+                .Tasks
+                .Include(t => t.Tags)
+                .Include(t => t.AssignedTo)
+            )
+                        where t.Id == id
+                        select new TaskDetailsDTO(
+                            t.Id,
+                            t.Title,
+                            t.Description,
+                            t.Created,
+                            t.AssignedTo == null ? "" : t.AssignedTo.Name,
+                            t.Tags.Select(tag => tag.Name).ToList(),
+                            t.State,
+                            t.StateUpdated
+                        );
+
+            var entity = tasks.FirstOrDefault();
+
+            if (entity == null)
+            {
+                return (Response.NotFound, null);
+            }
+
+            return (Response.Success, tasks.FirstOrDefault());
+        }
+
+        public Response Update(TaskUpdateDTO task)
         {
             var entity = _context.Tasks.Find(task.Id);
 
+            if (entity == null) {
+                return Response.NotFound;
+            }
+
+            if (task.Tags != null) {
+                entity.Tags = GetTags(task.Tags).ToList(); 
+            }
+
+            var assignedTo = GetUser(task.AssignedToId);
+
+            if (assignedTo == null && task.AssignedToId != null)
+            {
+                return Response.BadRequest;
+            }
+
+            entity.AssignedTo = assignedTo;
             entity.Title = task.Title;
             entity.Description = task.Description;
 
+            if (task.State != entity.State) {
+                entity.State = task.State;
+                entity.StateUpdated = DateTime.UtcNow;
+            }
+            
             _context.SaveChanges();
-       }
-    
+
+            return Response.Updated;
+        }
+
+        private IIncludableQueryable<Task, User> GetSource() {
+            return _context
+                .Tasks
+                .Include(t => t.Tags)
+                .Include(t => t.AssignedTo);
+        }
+
+        private User GetUser(int? userId)
+        {
+            if (userId == null) {
+                return null;
+            }
+
+            return _context.Users.Find(userId);
+        }
+
+        private IEnumerable<Tag> GetTags(IEnumerable<string> tags) {
+            // FIXME: There is no guarantee that all the tags specified are actually here
+            var entities = _context.Tags.Where(t => tags.Contains(t.Name)).ToDictionary(t => t.Name);
+
+            foreach (var tag in tags)
+            {
+                yield return entities.TryGetValue(tag, out var t) ? t : new Tag { Name = tag };
+            } 
+        }
+
+        private static TaskDTO TaskToTaskDTO(Task task) {
+            return new TaskDTO(
+                task.Id,
+                task.Title,
+                task.AssignedTo == null ? "" : task.AssignedTo.Name,
+                task.Tags.Select(t => t.Name).ToList(),
+                task.State
+            );
+        }
+
         public void Dispose()
         {
-             _context.Dispose();
+            _context.Dispose();
         }
     }
 }

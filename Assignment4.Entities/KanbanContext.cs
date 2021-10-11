@@ -17,7 +17,7 @@ namespace Assignment4.Entities
         {
             modelBuilder
                     .Entity<Task>()
-                    .Property(e => e.state)
+                    .Property(e => e.State)
                     .HasConversion(new EnumToStringConverter<State>());
         }
     }

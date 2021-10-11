@@ -6,19 +6,27 @@ namespace Assignment4.Core
 {
     public interface ITaskRepository : IDisposable
     {
-        IReadOnlyCollection<TaskDTO> All();
+        (Response, IReadOnlyCollection<TaskDTO>) All();
+        
+        (Response, IReadOnlyCollection<TaskDTO>) AllRemoved();
+        
+        (Response, IReadOnlyCollection<TaskDTO>) AllByTag(string tag);
+        
+        (Response, IReadOnlyCollection<TaskDTO>) AllByUser(int userId);
+        
+        (Response, IReadOnlyCollection<TaskDTO>) AllByState(State state);
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="task"></param>
         /// <returns>The id of the newly created task</returns>
-        TaskDTO Create(TaskCreateDTO task);
+        (Response, TaskDTO) Create(TaskCreateDTO task);
 
-        void Delete(int taskId);
+        Response Delete(int taskId);
 
-        TaskDetailsDTO FindById(int id);
+        (Response, TaskDetailsDTO) FindById(int taskId);
 
-        void Update(TaskDTO task);
+        Response Update(TaskUpdateDTO task);
     }
 }
