@@ -1,0 +1,26 @@
+@startuml
+hide empty description
+[*] -->  NewTask
+NewTask : State = New
+NewTask : AssignedTo = null
+NewTask --> ActiveTask : User assigned
+NewTask --> DeletedTask : Task deleted
+
+ActiveTask : State = Active
+ActiveTask : AssignedTo = user
+ActiveTask --> ResolvedTask : Do task
+ActiveTask --> DeletedTask : Task deleted
+
+ResolvedTask --> ClosedTask : Task confirmed completed
+ResolvedTask : State = Resolved
+ResolvedTask : AssignedTo = user
+
+ClosedTask --> DeletedTask : Task deleted
+ClosedTask --> [*]
+ClosedTask : State = Closed
+ClosedTask : AssignedTo = user
+
+DeletedTask --> [*]
+DeletedTask : State = Deleted
+DeletedTask : AssignedTo = user | null
+@enduml

@@ -1,0 +1,75 @@
+@startuml
+title Single-responsebility Principle - Bad
+
+class TicketDistributorConductor {
+    tickets: Ticket[]
+    trains: Train[]
+    stations: Station[]
+
+    PurchaseTicket()
+    ProduceTicket()
+    ChangeTracks()
+    ScheduleTrain()
+}
+
+class Station {
+    someMethods()...
+    someMembers...
+}
+
+class Train {
+    someMethods()...
+    someMembers...
+}
+
+class Ticket {
+    someMethods()...
+    someMembers...
+}
+
+Station <|.. TicketDistributorConductor : Uses
+Train <|.. TicketDistributorConductor : Uses
+Ticket <|.. TicketDistributorConductor : Uses
+@enduml
+
+@startuml
+title Single-responsebility Principle - Good
+
+class TicketDistributor {
+    tickets: Ticket[]
+    stations: Station[]
+
+    PurchaseTicket()
+    ProduceTicket()
+}
+
+class Conductor {
+    trains: Train[]
+    stations: Station[]
+
+    ChangeTracks()
+    ScheduleTrain()
+}
+
+
+class Station {
+    someMethods()...
+    someMembers...
+    static stations: Station[]
+}
+
+class Train {
+    someMethods()...
+    someMembers...
+}
+
+class Ticket {
+    someMethods()...
+    someMembers...
+}
+
+Station <|.. TicketDistributor : Uses
+Station <|.. Conductor : Uses
+Train <|.. Conductor : Uses
+Ticket <|.. TicketDistributor : Uses
+@enduml

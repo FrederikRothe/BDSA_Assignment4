@@ -1,0 +1,59 @@
+@startuml
+enum State {
+    New
+    Active
+    Resolved
+    Closed
+    Removed
+}
+
+class Task {
+    Id : int
+    Title : string
+    AssignedTo? : User
+    State : State
+    Description? : string
+    Tags : Tag[]
+}
+
+note left of Task::AssignedTo
+    Optional reference to User entity
+end note
+note left of Task::Tags
+    many-to-many reference to Tag entity
+end note
+
+class User {
+    Id : int
+    Name : string
+    Email : string
+    Tasks : Task[]
+}
+
+note left of User::Name
+    string(100)
+end note
+note left of User::Email
+    string(100), required, unique
+end note
+note left of User::Tasks
+   list of Task entities belonging to User 
+end note
+
+class Tag {
+    Id : int
+    Name : string
+    Tasks : Task[]
+}
+
+note left of Tag::Name
+    string(50), required, unique
+end note
+note left of Tag::Tasks
+    many-to-many reference to Task entity
+end note
+
+User "1\nAssignedTo" -up-- "*\nTasks" Task
+Tag "*\nTags" -down-- "*\nTasks" Task
+State "1\nState" -left-- "*" Task
+@enduml

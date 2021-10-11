@@ -1,0 +1,39 @@
+@startuml
+title Dependency Inversion Principle - Bad
+
+class HighLevel {
+    createUser()
+}
+
+class Db {
+    createUser()
+    createDatabaseConnection()
+    generateData()
+    saveUser()
+}
+
+Db <|.. HighLevel : Call createUser() on Db
+@enduml
+
+@startuml
+title Dependency Inversion Principle - Good
+
+class HighLevel {
+    createUser()
+}
+
+interface UserRepository {
+    createUser
+}
+
+UserRepository <|.. HighLevel : Call createUser() on Db
+
+class DbUserRepository {
+    createUser()
+    createDatabaseConnection()
+    generateData()
+    saveUser()
+}
+
+UserRepository <-- DbUserRepository : Inherits
+@enduml
